@@ -4,6 +4,9 @@ from pprint import pprint
 import whisper
 from pytube import YouTube
 
+import ssl
+ssl._create_default_https_context = ssl._create_stdlib_context
+
 
 def transcribeVideoOrchestrator(youtube_url: str,  model_name: str):
     video = downloadYoutubeVideo(youtube_url)
@@ -15,7 +18,7 @@ def transcribe(video: dict, model_name="medium"):
     print("Transcribing...", video['name'])
     print("Using model:", model_name)
     model = whisper.load_model(model_name)
-    result = model.transcribe(video['path'], )
+    result = model.transcribe(video['path'], fp16=False)
     pprint(result)
     return result["text"]
 
