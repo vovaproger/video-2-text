@@ -6,6 +6,7 @@ from summarizer import summarize_text
 
 if 'transcript' not in st.session_state:
     st.session_state.transcript = None
+from streamlit.components.v1 import html
 
 
 def open_buy_me_coffee():
@@ -47,6 +48,7 @@ def main():
             data-y_margin="18">
         </script>
     """
+    html(buy_me_coffee_script)
     html(buy_me_coffee_script)
     st.title("Support Me on Buy Me a Coffee")
     st.write(
