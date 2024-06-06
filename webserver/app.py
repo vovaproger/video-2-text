@@ -2,18 +2,33 @@ import streamlit as st
 from businessLogic import transcribeVideoOrchestrator
 from streamlit.components.v1 import html
 
-from transformers import pipeline # for summarizing generated script
+from summarizer import summarize_text
 
-from transformers import T5ForConditionalGeneration, T5Tokenizer
+if 'transcript' not in st.session_state:
+    st.session_state.transcript = None
 
-model_name = "t5-small"
-used_model = T5ForConditionalGeneration.from_pretrained(model_name)
-tokenizer = T5Tokenizer.from_pretrained(model_name)
 
 def open_buy_me_coffee():
     st.markdown('<script>document.getElementById("buy-me-coffee-btn").click();</script>',
                 unsafe_allow_html=True)
 
+def transcribe_button(transcript,url,model):
+    if url:
+            transcript = transcribeVideoOrchestrator(url, model)
+            st.session_state.transcript = transcript
+
+            if transcript:
+                st.subheader("Transcript")
+                st.write(transcript)
+            else:
+                st.error("Error occurred while transcribing.")
+                st.write("Please try again.")
+    
+def summarize_button(transcript):
+    st.write("Writing a summary...")
+    summary = summarize_text(transcript)
+    st.write(summary)
+    print("Done!")  
 
 def main():
     st.title("Video2Text")
@@ -40,34 +55,17 @@ def main():
 
     # User input: YouTube URL
     url = st.text_input("Enter YouTube URL:")
-
     # User input: model
     models = ["tiny", "base", "small", "medium", "large"]
     model = st.selectbox("Select Model:", models)
-    transcript = None
-    done=False
+    transcript=None
     st.write(
         "If you take a smaller model it is faster but not as accurate, whereas a larger model is slower but more accurate.")
     if st.button("Transcribe"):
-        if url:
-            transcript = transcribeVideoOrchestrator(url, model)
+        transcribe_button(transcript,url,model)
 
-            if transcript:
-                st.subheader("Transcription:")
-                st.write(transcript)
-                done=True
-            else:
-                st.error("Error occurred while transcribing.")
-                st.write("Please try again.")
-
-    if done==True:
-        if st.button("Summarize"):
-            st.write("Writing a summary...")
-            summarizer = pipeline("summarization", model=used_model) # figure out why it doesn't return anything
-            summary = summarizer(transcript, max_length=200, min_length=30, do_sample=False)
-            print(summary[0]['summary_text'])
-            st.write(summary[0]['summary_text'])
-            print("Done!")
+    if st.button("Summarize"):
+        summarize_button(st.session_state.transcript)
 
     st.markdown('<div style="margin-top: 450px;"</div>',
                 unsafe_allow_html=True)
