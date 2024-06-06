@@ -1,3 +1,9 @@
 pytube
 openai-whisper
 streamlit
+torch
+transformers
+datasets
+fastapi
+uvicorn
+supabase

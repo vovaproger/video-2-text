@@ -2,6 +2,13 @@ import streamlit as st
 from businessLogic import transcribeVideoOrchestrator
 from streamlit.components.v1 import html
 
+from transformers import pipeline # for summarizing generated script
+
+from transformers import T5ForConditionalGeneration, T5Tokenizer
+
+model_name = "t5-small"
+used_model = T5ForConditionalGeneration.from_pretrained(model_name)
+tokenizer = T5Tokenizer.from_pretrained(model_name)
 
 def open_buy_me_coffee():
     st.markdown('<script>document.getElementById("buy-me-coffee-btn").click();</script>',
@@ -37,6 +44,8 @@ def main():
     # User input: model
     models = ["tiny", "base", "small", "medium", "large"]
     model = st.selectbox("Select Model:", models)
+    transcript = None
+    done=False
     st.write(
         "If you take a smaller model it is faster but not as accurate, whereas a larger model is slower but more accurate.")
     if st.button("Transcribe"):
@@ -46,12 +55,23 @@ def main():
             if transcript:
                 st.subheader("Transcription:")
                 st.write(transcript)
+                done=True
             else:
                 st.error("Error occurred while transcribing.")
                 st.write("Please try again.")
 
+    if done==True:
+        if st.button("Summarize"):
+            st.write("Writing a summary...")
+            summarizer = pipeline("summarization", model=used_model) # figure out why it doesn't return anything
+            summary = summarizer(transcript, max_length=200, min_length=30, do_sample=False)
+            print(summary[0]['summary_text'])
+            st.write(summary[0]['summary_text'])
+            print("Done!")
+
     st.markdown('<div style="margin-top: 450px;"</div>',
                 unsafe_allow_html=True)
+
 
     st.write(
         "If you need help or have questions about Video2Text, feel free to reach out to me.")
