@@ -7,3 +7,7 @@ datasets
 fastapi
 uvicorn
 supabase
+accelerate
+google-api-python-client
+progressbar2
+yt-dlp # install if you have a method to process an age-restricted video

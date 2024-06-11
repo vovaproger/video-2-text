@@ -1,7 +1,14 @@
 ![banner img](https://i.ibb.co/4tzG9LY/Video2-Text-Banner.png)
 
 
-# Video2Text
+# GetBetterHead
+
+GetBetterHead is an AI chatbot that answers in the mental health, psychology, and neurology domains. This innovative tool leverages a comprehensive database of video transcripts from reputable YouTube experts in these fields. The chatbot delivers accurate and insightful responses using state-of-the-art natural language processing techniques. 
+
+**DISCLAIMER** 
+
+
+
 
 Video2Text (https://video2text.de) allows you to easily convert a youtube video to text. This process is also called transcription.
 It is completely free to use and runs locally on your pc.
