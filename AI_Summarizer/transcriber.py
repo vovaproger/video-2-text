@@ -15,11 +15,11 @@ ids = json.load(f)
 
 model = whisper.load_model("base")
 
-def get_audio_stream(video_id):
+def get_audio_stream(video_id): 
 
     try:
 
-        video_url = f"https://www.youtube.com/watch?v={video_id}"
+        video_url = f"https://www.youtube.com/watch?v={video_id}" 
 
         yt = YouTube(video_url)
         audio_stream = yt.streams.filter(only_audio=True).first()
@@ -30,7 +30,7 @@ def get_audio_stream(video_id):
 
 # Function to convert audio stream to WAV format
 def stream_to_wav(audio_stream):
-    try:
+    if audio_stream != None:
         buffer = io.BytesIO()
         audio_stream.stream_to_buffer(buffer)
         buffer.seek(0)
@@ -39,7 +39,7 @@ def stream_to_wav(audio_stream):
         audio_segment.export(wav_buffer, format="wav")
         wav_buffer.seek(0)
         return wav_buffer
-    except audio_stream == None:
+    else:
         return None
 
 def transcribe_videos():
@@ -56,11 +56,11 @@ def transcribe_videos():
         
         i+=1
 
-        audio = get_audio_stream(item['videoId'])
+        audio = get_audio_stream(item['videoId']) 
 
         wav_buffer = stream_to_wav(audio)
 
-        try:
+        if wav_buffer != None:
 
             with tempfile.NamedTemporaryFile(suffix=".wav") as tmp_file:
                 tmp_file.write(wav_buffer.read())
@@ -69,7 +69,7 @@ def transcribe_videos():
 
             transcript_array.append(transcript_text['text'])
 
-        except wav_buffer == None:
+        else:
             pass
 
     bar.finish()

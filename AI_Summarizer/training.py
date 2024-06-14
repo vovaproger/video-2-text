@@ -1,50 +1,85 @@
-from transformers import BertTokenizer, BertForQuestionAnswering, Trainer, TrainingArguments
-from datasets import Dataset
-import json
+from datasets import load_dataset
+from transformers import BertTokenizerFast, BertForQuestionAnswering, Trainer, TrainingArguments
 
-# Loading the BERT tokenizer and model
-tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')
-model = BertForQuestionAnswering.from_pretrained('bert-base-uncased', num_labels=2)
+dataset = load_dataset("squad_v2") # figure out why it trains so slow (341 days. yep)
 
-#Loading the dataset from a JSON file
+tokenizer = BertTokenizerFast.from_pretrained("bert-base-uncased")
 
-f = open(f'/Users/uladzimircharniauski/Documents/GetBetterHead/AI_Summarizer/alpaca_gpt4_data.json')
-data = json.load(f)
-dataset_dict = {'question': [], 'context': [], 'answers': []}
-for item in data:
-    dataset_dict['question'].append(item['instruction'])
-    dataset_dict['context'].append(item['input'])
-    dataset_dict['answers'].append(item['output'])
+model = BertForQuestionAnswering.from_pretrained("bert-base-uncased")
 
-dataset = Dataset.from_dict(dataset_dict)
 
-#Loading the validation dataset from a JSON file - we use Vicuna evaluation datasets
+def prepare_train_features(examples):
 
-f_question = open(f'/Users/uladzimircharniauski/Documents/GetBetterHead/AI_Summarizer/json_vicuna_questions.json')
-f_answer = open(f'/Users/uladzimircharniauski/Documents/GetBetterHead/AI_Summarizer/json_vicuna_answers.json')
+    tokenized_examples = tokenizer(
+        examples["question"],
+        examples["context"],
+        truncation="only_second",
+        max_length=384,
+        stride=128,
+        return_overflowing_tokens=True,
+        return_offsets_mapping=True,
+        padding="max_length",
+    )
 
-data_q = json.load(f_question)
-data_answer = json.load(f_answer)
+    # Since one example might give us several features if it has a long context, we need a map from a feature to its example. This key gives us just that.
+    sample_mapping = tokenized_examples.pop("overflow_to_sample_mapping")
 
-validation_dict = {'question': [], 'context': [], 'answers': []}
+    # The offset mappings will give us a map from token to character position in the original context. This will help us compute the start_positions and end_positions.
+    offset_mapping = tokenized_examples.pop("offset_mapping")
 
-for item_q in data_q:
-    validation_dict['question'].append(item_q['text'])
-    validation_dict['context'].append(item_q['category'])
+    # Let's label those examples!
+    tokenized_examples["start_positions"] = []
+    tokenized_examples["end_positions"] = []
 
-for item_a in data_answer:
-    validation_dict['answers'].append(item_a['text'])
+    for i, offsets in enumerate(offset_mapping):
+        # We will label impossible answers with the index of the CLS token.
+        input_ids = tokenized_examples["input_ids"][i]
+        cls_index = input_ids.index(tokenizer.cls_token_id)
 
-validation_dataset = Dataset.from_dict(validation_dict)
+        # Grab the sequence corresponding to that example (to know what is the context and what is the question).
+        sequence_ids = tokenized_examples.sequence_ids(i)
 
-# Function to preprocess examples
-def preprocess_function(examples):
-    return tokenizer(examples["question"], examples["context"], examples["answers"], truncation=True, padding="max_length")
+        # One example can give several spans, this is the index of the example containing this span of text.
+        sample_index = sample_mapping[i]
+        answers = examples["answers"][sample_index]
+        # If no answers are given, set the cls_index as answer.
+        if len(answers["answer_start"]) == 0:
+            tokenized_examples["start_positions"].append(cls_index)
+            tokenized_examples["end_positions"].append(cls_index)
+        else:
+            # Start/end character index of the answer in the text.
+            start_char = answers["answer_start"][0]
+            end_char = start_char + len(answers["text"][0])
 
-tokenized_datasets = dataset.map(preprocess_function, batched=True)
-tokenized_validation_datasets = validation_dataset.map(preprocess_function, batched=True)
+            # Start token index of the current span in the text.
+            token_start_index = 0
+            while sequence_ids[token_start_index] != 1:
+                token_start_index += 1
 
-# Define the training arguments
+            # End token index of the current span in the text.
+            token_end_index = len(input_ids) - 1
+            while sequence_ids[token_end_index] != 1:
+                token_end_index -= 1
+
+            # Detect if the answer is out of the span (in which case this feature is labeled with the CLS index).
+            if not (offsets[token_start_index][0] <= start_char and offsets[token_end_index][1] >= end_char):
+                tokenized_examples["start_positions"].append(cls_index)
+                tokenized_examples["end_positions"].append(cls_index)
+            else:
+                # Otherwise move the token_start_index and token_end_index to the two ends of the answer.
+                while token_start_index < len(offsets) and offsets[token_start_index][0] <= start_char:
+                    token_start_index += 1
+                tokenized_examples["start_positions"].append(token_start_index - 1)
+
+                while offsets[token_end_index][1] >= end_char:
+                    token_end_index -= 1
+                tokenized_examples["end_positions"].append(token_end_index + 1)
+
+    return tokenized_examples
+
+tokenized_datasets = dataset.map(prepare_train_features, batched=True, remove_columns=dataset["train"].column_names)
+
+
 training_args = TrainingArguments(
     output_dir="./results",
     evaluation_strategy="epoch",
@@ -55,19 +90,13 @@ training_args = TrainingArguments(
     weight_decay=0.01,
 )
 
-# Create the Trainer instance
 trainer = Trainer(
     model=model,
     args=training_args,
-    train_dataset=tokenized_datasets, 
-    eval_dataset = tokenized_validation_datasets
+    train_dataset=tokenized_datasets["train"],
+    eval_dataset=tokenized_datasets["validation"],
 )
 
-# Train the model
 trainer.train()
-trainer.evaluate()
 
-print("BERT is trained and validated successfully")
-
-
-
+print("BERT is trained successfully1")
