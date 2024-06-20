@@ -1,4 +1,3 @@
-![banner img](https://i.ibb.co/4tzG9LY/Video2-Text-Banner.png)
 
 
 # GetBetterHead
@@ -6,18 +5,6 @@
 GetBetterHead is an AI chatbot that answers in the mental health, psychology, and neurology domains. This innovative tool leverages a comprehensive database of video transcripts from reputable YouTube experts in these fields. The chatbot delivers accurate and insightful responses using state-of-the-art natural language processing techniques. 
 
 **DISCLAIMER** 
-
-
-
-
-Video2Text (https://video2text.de) allows you to easily convert a youtube video to text. This process is also called transcription.
-It is completely free to use and runs locally on your pc.
-
-
-## Video Tutorial
-
-[![](https://markdown-videos-api.jorgenkh.no/youtube/b9oyBebJCK0)](https://youtu.be/b9oyBebJCK0)
-
 
 ## Written Tutorial
 
@@ -32,7 +19,7 @@ or
 0. clone the repo with `git clone https://github.com/XamHans/video-2-text.git`
 1. cd into webserver
 2. pip3 install -r requirements.txt
-3. streamlit run app.py
+3. streamlit run chatbot_app.py (locate this app to your folder)
 4. open http://localhost:8501 in your browser
 
 ## Help

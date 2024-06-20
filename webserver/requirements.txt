@@ -11,4 +11,8 @@ accelerate
 google-api-python-client
 progressbar2
 yt-dlp # install if you have a method to process an age-restricted video
-
+sklearn
+langchain
+langchain-core
+langchain-community
+openai==0.28.0

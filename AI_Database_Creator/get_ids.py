@@ -4,8 +4,8 @@ from googleapiclient.errors import HttpError
 import isodate
 
 # Replace with your API key and the channel ID
-API_KEY = 'AIzaSyCusAp2X-7HcDvqP9c-kxJkYFt5Vx7uTnI'
-CHANNEL_ID = 'UClHVl2N3jPEbkNJVx-ItQIQ'
+API_KEY = 'your_api' # insert your key
+CHANNEL_ID = 'UClHVl2N3jPEbkNJVx-ItQIQ' #HealthyGamer (use any other one)
 
 def get_most_popular_video_ids(channel_id, max_results=100):
     youtube = build('youtube', 'v3', developerKey=API_KEY)

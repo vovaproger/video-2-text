@@ -4,7 +4,7 @@ import json
 import ssl
 ssl._create_default_https_context = ssl._create_stdlib_context
 
-API_KEY = 'AIzaSyCusAp2X-7HcDvqP9c-kxJkYFt5Vx7uTnI'
+API_KEY = 'your_api' # insert your key
 youtube = build('youtube', 'v3', developerKey=API_KEY)
 
 path_ids = f'/Users/uladzimircharniauski/Documents/GetBetterHead/video_ids.json'
